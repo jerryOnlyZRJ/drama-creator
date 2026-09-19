@@ -1,0 +1,19 @@
+# 使用公开依赖和干净 runner，测试及前端构建不需要作者作品或平台密钥。
+name: Verify public source
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      # keytar 是本机凭据桥接依赖；Linux 原生构建需要 libsecret 开发包。
+      - run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev
+      - run: npm ci
+      - run: npm test
+      - run: npm run check:bundle-size

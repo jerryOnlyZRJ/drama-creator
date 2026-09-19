@@ -1,0 +1,9 @@
+{
+  "identifier": "main",
+  "description": "Allow the main Drama Creator webview to call app-owned commands for user-selected local directories.",
+  "windows": ["main"],
+  "remote": {
+    "urls": ["http://127.0.0.1:5173/*"]
+  },
+  "permissions": ["core:default"]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Drama Creator"
+  short_description: "操作 Drama Creator 桌面应用与项目闭环"
+  default_prompt: "Use $drama-creator to inspect or operate a Drama Creator project workflow."

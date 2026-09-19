@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Drama Creator · 分镜画布</title>
+  <link rel="stylesheet" href="./shared.css" />
+  <link rel="stylesheet" href="./shot.css" />
+</head>
+<body>
+  <!--
+    L3 分镜画布：
+    - URL 参数 ?path=<episodePath>&shot=<shotNo> 决定渲染哪一个镜头闭包；
+    - 顶栏第一行只放品牌与面包屑，第二行承载镜头导航和生产动作，避免按钮侵入居中面包屑；
+    - 主体复用 cluster 卡片网格，仅渲染 buildClusters(doc, { shotFilter }) 返回的闭包；
+    - 右侧 Inspector 与 QC 编辑器与既有逻辑相同。
+  -->
+  <div class="app-shell shot" data-loading="true">
+    <header class="app-bar">
+      <div class="app-bar__brand">
+        <span class="brand-mark" aria-hidden="true">DC</span>
+        <div class="brand-text">
+          <strong id="shotTitle">Drama Creator</strong>
+          <span id="shotMeta" class="brand-meta">未加载</span>
+        </div>
+      </div>
+      <nav class="app-bar__crumbs" aria-label="位置">
+        <a class="crumb crumb--link" href="/">项目库</a>
+        <span class="crumb-sep">/</span>
+        <a id="projectCrumb" class="crumb crumb--link" href="#">项目</a>
+        <span class="crumb-sep">/</span>
+        <span id="shotCrumb" class="crumb crumb--current">镜头</span>
+      </nav>
+      <div class="app-bar__actions shot-toolbar" aria-label="镜头操作">
+        <div class="shot-toolbar__group shot-toolbar__nav">
+          <a id="backToShotVideos" class="ghost-button shot-return-link" href="/" aria-label="返回分镜管理">返回分镜管理</a>
+          <button id="prevShot" class="ghost-button" disabled>← 上一镜头</button>
+          <button id="nextShot" class="ghost-button" disabled>下一镜头 →</button>
+        </div>
+        <div class="shot-toolbar__group shot-toolbar__production">
+          <button id="referenceManagerButton" class="ghost-button">添加参考资源</button>
+          <button id="manualImportButton" class="ghost-button">导入外部资源</button>
+          <button id="feedButton" class="ghost-button">投喂信息</button>
+          <button id="submitJimengAutomationButton" class="primary-button">提交到即梦生成</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-body">
+      <section class="canvas" aria-label="资源关系画布">
+        <div id="canvasViewport" class="canvas__viewport">
+          <div id="canvasStage" class="canvas__stage">
+            <svg id="canvasLines" class="canvas__lines" aria-hidden="true"></svg>
+            <div id="canvasCards" class="canvas__cards"></div>
+            <div id="canvasColumns" class="canvas__columns" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <div class="canvas__overlay" id="canvasOverlay" hidden>
+          <div class="overlay-card">
+            <p class="eyebrow">未就绪</p>
+            <h1 id="overlayTitle">等待加载分镜</h1>
+            <p id="overlayBody">需要在 URL 中提供 episode path 与 shot 编号。</p>
+            <code id="overlayHint" class="overlay-hint"></code>
+          </div>
+        </div>
+      </section>
+
+      <aside id="inspector" class="inspector" aria-label="资源详情">
+        <header class="inspector__header">
+          <p class="eyebrow">资源详情</p>
+          <h2 id="inspectorTitle">选择一张卡片</h2>
+          <p id="inspectorSubtitle" class="inspector__subtitle">点击画布卡片查看资源预览、提示词、引用资源和质检结论。</p>
+        </header>
+        <section class="inspector__section" id="inspectorMedia" hidden></section>
+        <section class="inspector__section" id="inspectorMeta"></section>
+        <section class="inspector__section resource-actions" id="resourceActions">
+          <p class="eyebrow">资源操作</p>
+          <button id="setCurrentVideoButton" class="primary-button" type="button" disabled>设为当前版本</button>
+          <button id="deleteResourceButton" class="danger-button" type="button" disabled>移入回收站</button>
+          <p id="resourceDeleteHint" class="resource-actions__hint">选择图片、音频或视频资源后可删除。</p>
+        </section>
+        <section class="inspector__section qc-editor" id="qcEditorSection">
+          <p class="eyebrow">QC 质检</p>
+          <label>
+            <span>结论</span>
+            <select id="qcStatus" disabled>
+              <option value="reviewing">待质检</option>
+              <option value="approved">已通过</option>
+              <option value="rerun_needed">需重跑</option>
+            </select>
+          </label>
+          <label>
+            <span>备注</span>
+            <textarea id="qcNote" rows="4" placeholder="记录构图问题、重跑建议或验收结论" disabled></textarea>
+          </label>
+          <button id="saveQcButton" class="primary-button" disabled>保存 QC</button>
+          <p id="qcUpdatedAt" class="qc-editor__timestamp"></p>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="app-status">
+      <div class="app-status__group">
+        <span id="saveState" class="status-pill">未加载</span>
+        <span id="counts" class="status-meta">0 资源 · 0 依赖</span>
+      </div>
+      <div class="app-status__zoom" role="group" aria-label="缩放控制">
+        <button id="zoomOut" title="缩小">−</button>
+        <button id="zoomReset" title="自适应"><span id="zoomLabel">100%</span></button>
+        <button id="zoomIn" title="放大">＋</button>
+      </div>
+      <div id="errorBanner" class="status-error" hidden></div>
+    </footer>
+  </div>
+
+  <!-- 外部资源导入：用于未配置模型、或在即梦/剪映等外部平台生成后回填当前镜头。 -->
+  <dialog id="manualImportDialog" class="modal manual-import">
+    <form method="dialog" id="manualImportForm" class="modal__body">
+      <header class="modal__header">
+        <h2>导入外部资源</h2>
+        <p class="modal__hint">把外部生成的关键帧或成片复制进当前剧集目录，并绑定到当前镜头。</p>
+      </header>
+      <label class="modal__field">
+        <span>资源类型</span>
+        <select id="manualImportKind">
+          <option value="image">图片素材</option>
+          <option value="video">视频成片</option>
+        </select>
+      </label>
+      <label class="modal__field">
+        <span>文件路径</span>
+        <div class="modal__path-row">
+          <input type="text" id="manualImportPath" placeholder="/Users/.../output.mp4" required />
+          <button type="button" id="pickManualAssetFile" class="ghost-button">选择文件</button>
+        </div>
+      </label>
+      <label class="modal__field">
+        <span>显示名称（可选）</span>
+        <input type="text" id="manualImportTitle" placeholder="留空则使用文件名" />
+      </label>
+      <p id="manualImportError" class="modal__error" hidden></p>
+      <footer class="modal__footer">
+        <button type="button" id="manualImportCancel" class="ghost-button">取消</button>
+        <button type="submit" class="primary-button">导入到当前镜头</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- 参考资源管理：只调整当前镜头 prompt -> asset 的引用边，不复制、不删除公共资产文件。 -->
+  <dialog id="referenceManagerDialog" class="modal reference-manager">
+    <div class="modal__body">
+      <header class="modal__header reference-manager__header">
+        <div class="reference-manager__title">
+          <h2>添加参考资源</h2>
+          <p class="modal__hint">从已有图片资产中选择当前镜头需要的角色、场景、道具或关键帧参考；上传顺序 1、2、3 会决定投喂时的引用顺序。</p>
+        </div>
+        <button type="button" id="referenceManagerClose" class="reference-manager__close" aria-label="关闭添加参考资源" title="关闭">×</button>
+      </header>
+      <section class="reference-manager__section">
+        <div class="reference-manager__section-head">
+          <h3>当前参考顺序</h3>
+          <span id="currentReferenceCount" class="reference-manager__count">0 项</span>
+        </div>
+        <ol id="currentReferenceList" class="reference-manager__list reference-manager__list--ordered"></ol>
+      </section>
+      <section class="reference-manager__section">
+        <label class="modal__field">
+          <span>搜索已有图片资产</span>
+          <input type="search" id="referenceAssetSearch" placeholder="输入角色、场景、道具或路径关键词" />
+        </label>
+        <div id="availableReferenceList" class="reference-manager__list"></div>
+      </section>
+      <p id="referenceManagerError" class="modal__error" hidden></p>
+    </div>
+  </dialog>
+
+  <!-- 即梦投喂信息：主流程由顶部按钮直接启动自动化，这里保留人工核对与复制兜底。 -->
+  <dialog id="jimengFeedDialog" class="modal jimeng-feed">
+    <div class="modal__body">
+      <header class="modal__header">
+        <h2>即梦投喂信息</h2>
+        <p class="modal__hint">按全局视频模型配置准备提示词和参考图顺序；自动化会打开 Drama Creator 托管的即梦窗口，不复用你平时打开的 Chrome 标签，提交前仍会停下等待确认。</p>
+      </header>
+      <div class="jimeng-feed__target">
+        <strong id="jimengFeedTitle">当前镜头</strong>
+        <a id="jimengTargetLink" class="ghost-button" href="https://jimeng.jianying.com/" target="_blank" rel="noreferrer">打开即梦</a>
+      </div>
+      <p id="jimengAutomationStatus" class="jimeng-feed__status" hidden></p>
+      <label class="modal__field jimeng-feed__prompt">
+        <span>提示词</span>
+        <textarea id="jimengPromptText" readonly></textarea>
+      </label>
+      <section class="jimeng-feed__section">
+        <h3>参考图上传顺序</h3>
+        <ol id="jimengReferenceList" class="jimeng-feed__list"></ol>
+      </section>
+      <section class="jimeng-feed__section">
+        <h3>提交前检查</h3>
+        <ul id="jimengGateList" class="jimeng-feed__list"></ul>
+        <p class="jimeng-feed__handoff">生成后通过「导入外部资源」回填下载的 MP4，再在右侧资源详情里完成 QC。</p>
+      </section>
+      <section class="jimeng-feed__section" id="jimengWarningSection" hidden>
+        <h3>需要人工确认</h3>
+        <ul id="jimengWarningList" class="jimeng-feed__list jimeng-feed__list--warning"></ul>
+      </section>
+      <footer class="modal__footer">
+        <button type="button" id="jimengFeedClose" class="ghost-button">关闭</button>
+        <button type="button" id="copyJimengPrompt" class="ghost-button">复制提示词</button>
+        <button type="button" id="copyJimengUploadList" class="ghost-button">复制上传清单</button>
+        <button type="button" id="copyJimengJson" class="ghost-button">复制投喂包 JSON</button>
+        <button type="button" id="startJimengAutomation" class="primary-button">提交到即梦生成</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <script type="module" src="./shot.js"></script>
+</body>
+</html>

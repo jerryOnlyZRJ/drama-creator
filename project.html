@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Drama Creator · 项目详情</title>
+  <link rel="stylesheet" href="./shared.css" />
+  <link rel="stylesheet" href="./project.css" />
+</head>
+<body>
+  <div class="app-shell project">
+    <header class="app-bar">
+      <div class="app-bar__brand">
+        <span class="brand-mark" aria-hidden="true">DC</span>
+        <div class="brand-text">
+          <strong id="projectTitle">Drama Creator</strong>
+          <span id="projectMeta" class="brand-meta">加载中…</span>
+        </div>
+      </div>
+      <nav class="app-bar__crumbs" aria-label="位置">
+        <a class="crumb crumb--link" href="/">项目库</a>
+        <span class="crumb-sep">/</span>
+        <span id="projectCrumb" class="crumb crumb--current">项目</span>
+      </nav>
+      <div class="app-bar__actions"></div>
+    </header>
+
+    <main class="project__body">
+      <nav id="workflowSteps" class="workflow-steps" aria-label="创作步骤">
+        <button id="stepScriptShots" class="workflow-step is-active" type="button" data-step="script_shots">
+          <span class="workflow-step__index">1</span>
+          <span class="workflow-step__text">
+            <strong>剧本与分镜</strong>
+            <small>故事输入、分镜剧本、分镜拆分</small>
+          </span>
+        </button>
+        <button id="stepAssetLibrary" class="workflow-step" type="button" data-step="asset_library">
+          <span class="workflow-step__index">2</span>
+          <span class="workflow-step__text">
+            <strong>公共资产</strong>
+            <small>角色、场景、道具、风格参考</small>
+          </span>
+        </button>
+        <button id="stepShotVideos" class="workflow-step" type="button" data-step="shot_videos">
+          <span class="workflow-step__index">3</span>
+          <span class="workflow-step__text">
+            <strong>分镜视频</strong>
+            <small>逐镜头生成、回填、质检</small>
+          </span>
+        </button>
+        <button id="stepExport" class="workflow-step" type="button" data-step="export">
+          <span class="workflow-step__index">4</span>
+          <span class="workflow-step__text">
+            <strong>成片导出</strong>
+            <small>合成原片、字幕版、SRT</small>
+          </span>
+        </button>
+      </nav>
+
+      <section id="episodeStrip" class="episode-strip" aria-label="分集">
+        <div class="episode-selector">
+          <label for="episodeSelect">当前分集</label>
+          <select id="episodeSelect"></select>
+          <span id="episodeSummary" class="status-meta">加载中…</span>
+        </div>
+        <div class="episode-bar" id="episodeBar" hidden></div>
+        <div class="episode-actions" aria-label="分集操作">
+          <button id="deleteEpisodeButton" class="danger-button" type="button" hidden>删除分集</button>
+          <button id="newEpisodeButton" class="ghost-button" type="button">新建分集</button>
+        </div>
+      </section>
+
+      <nav class="project-tabs" role="tablist" aria-label="兼容视图入口" hidden>
+        <button id="tabShots" class="tab" role="tab" aria-selected="false" type="button">分镜管理</button>
+        <button id="tabLibrary" class="tab" role="tab" aria-selected="false" type="button">公共资源库</button>
+      </nav>
+
+      <section id="scriptPanel" class="panel script-panel" role="tabpanel">
+        <div class="script-sections">
+          <section class="workflow-card metadata-card" aria-labelledby="workMetadataTitle">
+            <header class="workflow-card__header">
+              <div>
+                <p class="eyebrow">Metadata</p>
+                <h2 id="workMetadataTitle">作品元数据</h2>
+              </div>
+            </header>
+            <dl class="metadata-grid" aria-label="当前作品状态">
+              <div class="metadata-item">
+                <dt>作品名称</dt>
+                <dd id="metadataProjectName">加载中…</dd>
+              </div>
+              <div class="metadata-item">
+                <dt>当前分集</dt>
+                <dd id="metadataEpisodeName">加载中…</dd>
+              </div>
+              <div class="metadata-item">
+                <dt>分集编号</dt>
+                <dd id="metadataEpisodeId">—</dd>
+              </div>
+              <div class="metadata-item">
+                <dt>当前步骤</dt>
+                <dd id="metadataWorkflowStep">剧本与分镜</dd>
+              </div>
+              <div class="metadata-item">
+                <dt>剧本状态</dt>
+                <dd id="metadataScriptStatus">待编写</dd>
+              </div>
+              <div class="metadata-item">
+                <dt>分镜数量</dt>
+                <dd id="metadataShotCount">0 个</dd>
+              </div>
+            </dl>
+            <div class="metadata-core-idea">
+              <label for="metadataCoreIdea">核心立意</label>
+              <textarea id="metadataCoreIdea" rows="3" placeholder="例如：真正的价值不由效率排名决定，而由人如何重新选择自己决定。"></textarea>
+              <label for="metadataGlobalBrief">全局设定</label>
+              <textarea id="metadataGlobalBrief" rows="5" placeholder="整理主要人物、主要场景、关键道具等公共信息；逐镜分镜剧本里不重复展示这些全局资料。"></textarea>
+              <label for="metadataJimengSpaceName">即梦空间</label>
+              <!-- 开源示例使用独立虚构项目，避免泄露真实创作信息。 -->
+              <input id="metadataJimengSpaceName" type="text" placeholder="例如：机器人送信" />
+              <footer>
+                <span id="metadataCoreIdeaState" class="status-meta">可补写整部作品的创作方向。</span>
+                <button id="saveCoreIdeaButton" class="ghost-button" type="button">保存元数据</button>
+              </footer>
+            </div>
+          </section>
+
+          <div class="script-compare-grid" aria-label="故事源与剧本对照">
+            <section class="workflow-card source-card" aria-labelledby="sourceCardTitle">
+              <header class="workflow-card__header">
+                <div>
+                  <p class="eyebrow">Source</p>
+                  <h2 id="sourceCardTitle">故事源</h2>
+                </div>
+                <label class="ghost-button file-button" for="storySourceFile">导入本地文本</label>
+                <input id="storySourceFile" class="sr-only" type="file" accept=".txt,.md,.markdown,text/plain,text/markdown" />
+              </header>
+              <textarea id="storySourceEditor" class="story-source-editor" placeholder="粘贴完整故事或故事梗概。这里保持纯故事叙事，不填写镜头、分镜、提示词或资产清单。"></textarea>
+              <footer class="workflow-card__footer">
+                <span id="storySourceMeta" class="status-meta">尚未保存文本</span>
+                <button id="saveStorySourceButton" class="primary-button" type="button">保存文本</button>
+              </footer>
+            </section>
+
+            <section class="workflow-card episode-script-card" aria-labelledby="episodeScriptTitle">
+              <header class="workflow-card__header episode-script-card__header">
+                <div>
+                  <p class="eyebrow">Storyboard</p>
+                  <h2 id="episodeScriptTitle">分镜剧本</h2>
+                </div>
+                <div class="episode-script-actions" aria-label="分镜剧本操作">
+                  <button id="generateScriptDraftButton" class="ghost-button" type="button" hidden aria-hidden="true">生成草稿</button>
+                  <button id="splitStoryboardButton" class="ghost-button" type="button">生成分镜剧本</button>
+                </div>
+              </header>
+              <div class="episode-script-card__body">
+                <textarea id="scriptDraftEditor" class="script-draft-editor script-draft-editor--hidden" hidden aria-hidden="true"></textarea>
+                <!-- 分镜剧本是 Step 1 右侧卡片的唯一正文，避免重复的脚本层级挤占阅读面积。 -->
+                <div class="storyboard-card__body" aria-label="分镜剧本内容">
+                  <div id="storyboardList" class="storyboard-list"></div>
+                  <div id="storyboardDeleteDialog" class="storyboard-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="storyboardDeleteTitle" hidden>
+                    <div class="storyboard-delete-dialog__panel">
+                      <p class="eyebrow">删除分镜</p>
+                      <h3 id="storyboardDeleteTitle">确认删除这个分镜？</h3>
+                      <p id="storyboardDeleteBody">删除后，后续分镜会重新编号；点击保存后会同步更新分镜脚本、提示词和视频任务。</p>
+                      <div class="storyboard-delete-dialog__actions">
+                        <button id="cancelStoryboardDeleteButton" class="ghost-button" type="button">取消</button>
+                        <button id="confirmStoryboardDeleteButton" class="danger-button" type="button">确认删除</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <footer class="workflow-card__footer">
+                <span id="storyboardState" class="status-meta">确认故事源后生成或手动整理分镜剧本。</span>
+                <div class="storyboard-footer-actions" aria-label="分镜剧本操作">
+                  <button id="addStoryboardShotButton" class="ghost-button compact-button" type="button">新增段落</button>
+                  <button id="saveStoryboardButton" class="primary-button compact-button" type="button">保存分镜</button>
+                </div>
+              </footer>
+              <footer class="workflow-card__footer script-draft-footer" hidden aria-hidden="true">
+                <span id="scriptDraftState">待从故事源改编。</span>
+                <button id="saveScriptDraftButton" class="primary-button" type="button">保存剧本</button>
+              </footer>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section id="libraryPanel" class="panel" role="tabpanel" hidden>
+        <div class="library-generation" aria-live="polite">
+          <div>
+            <strong>从剧本生成公共资产</strong>
+            <span>根据当前分镜剧本提取角色、场景、道具和风格候选，生成后可继续编辑或上传素材。</span>
+          </div>
+          <button id="generatePublicAssetsButton" class="primary-button" type="button">从剧本生成公共资产</button>
+          <span id="libraryGenerationState" class="status-meta">保存分镜剧本后即可生成公共资产候选。</span>
+        </div>
+        <div class="library-toolbar">
+          <input id="librarySearch" type="search" placeholder="搜索资产标题、标签、提示词、引用资源或镜头号" />
+          <div id="libraryTabs" class="library-tabs" aria-label="资产分类"></div>
+        </div>
+        <div class="library-layout">
+          <div class="library-main">
+            <div id="libraryState" class="panel__state" hidden></div>
+            <div id="libraryBody" class="library-body"></div>
+          </div>
+          <aside id="libraryInspector" class="library-inspector" aria-labelledby="libraryInspectorTitle">
+            <div id="libraryInspectorPreview" class="library-inspector__preview">
+              <span>选择一个公共资产</span>
+            </div>
+            <p class="eyebrow">Asset Detail</p>
+            <h2 id="libraryInspectorTitle">资产详情</h2>
+            <p id="libraryInspectorMeta" class="library-inspector__meta">点击左侧资产后，可在这里编辑名称、分类、状态和用途。</p>
+            <div class="library-form">
+              <label>
+                资产名称
+                <input id="assetNameInput" type="text" placeholder="例如：主角形象参考" />
+              </label>
+              <label>
+                分类
+                <select id="assetCategorySelect">
+                  <option value="characters">角色</option>
+                  <option value="locations">场景</option>
+                  <option value="props">道具</option>
+                  <option value="style-refs">风格参考</option>
+                  <option value="voices">音频参考</option>
+                  <option value="videos">视频参考</option>
+                </select>
+              </label>
+              <label>
+                状态
+                <select id="assetStatusSelect">
+                  <option value="pending">待准备</option>
+                  <option value="active">已可用</option>
+                  <option value="missing">缺失</option>
+                  <option value="approved">已确认</option>
+                </select>
+              </label>
+              <label class="checkbox-field">
+                <input id="assetRequiredCheckbox" type="checkbox" />
+                <span>标记为必需资产</span>
+              </label>
+              <label>
+                描述
+                <textarea id="assetDescriptionInput" rows="3" placeholder="描述角色、场景、道具或参考用途。"></textarea>
+              </label>
+              <label>
+                提示词
+                <textarea id="assetPromptInput" rows="4" placeholder="写清生成该公共资产时需要保持的外观、场景、材质或风格。"></textarea>
+              </label>
+              <label>
+                引用资源
+                <textarea id="assetReferenceAssetsInput" rows="2" placeholder="例如：小邮机器人形象、蓝色外壳；多个用逗号或换行分隔"></textarea>
+              </label>
+              <label>
+                标签
+                <input id="assetTagsInput" type="text" placeholder="多个标签用逗号分隔" />
+              </label>
+              <label>
+                关联分镜
+                <input id="assetLinkedShotsInput" type="text" placeholder="例如：s001, s004" />
+              </label>
+              <label>
+                参考用途
+                <input id="assetUsageInput" type="text" placeholder="例如：角色脸部参考、厨房场景参考" />
+              </label>
+              <label>
+                素材来源
+                <input id="assetSourceInput" type="text" placeholder="外部导入、手动上传或生成来源" />
+              </label>
+            </div>
+            <div class="library-inspector__actions">
+              <button id="saveAssetDetailButton" class="primary-button" type="button" disabled>保存资产</button>
+              <button id="generateAssetAudioButton" class="secondary-button" type="button" hidden disabled>生成角色音色</button>
+              <button id="deleteAssetButton" class="danger-button" type="button" disabled>移入回收站</button>
+              <span id="assetDetailState" class="status-meta">未选择资产</span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="shotsPanel" class="panel" role="tabpanel" hidden>
+        <div class="shots-toolbar">
+          <input id="shotsSearch" type="search" placeholder="搜索分镜编号或标题" />
+          <select id="shotsStatusFilter" aria-label="分镜状态筛选">
+            <option value="all">全部状态</option>
+            <option value="not_started">未生成</option>
+            <option value="feed_ready">准备投喂</option>
+            <option value="processing">处理中</option>
+            <option value="reviewing">待质检</option>
+            <option value="rerun_needed">需重跑</option>
+            <option value="approved">已通过</option>
+          </select>
+          <span id="shotsCount" class="status-meta">0 个分镜</span>
+        </div>
+        <div id="shotsState" class="panel__state" hidden></div>
+        <div id="shotsGrid" class="shots-grid"></div>
+      </section>
+
+      <section id="exportPanel" class="panel export-panel" role="tabpanel" hidden aria-labelledby="exportTitle">
+        <div class="export-workbench" aria-live="polite">
+          <section class="workflow-card export-check-card" aria-labelledby="exportCheckTitle">
+            <header class="export-card__header">
+              <div>
+                <p class="eyebrow">导出准备</p>
+                <h2 id="exportCheckTitle">导出检查</h2>
+              </div>
+              <span id="exportStatusBadge" class="export-status-badge">待检查</span>
+            </header>
+            <p id="exportReadiness" class="export-readiness">等待所有分镜视频回填后，可导出原片、字幕版与 SRT 字幕文件。</p>
+            <div class="export-shot-list" id="exportShotList" aria-label="分镜顺序和状态"></div>
+            <div id="exportStatsLegend" class="export-stats"></div>
+          </section>
+
+          <section class="workflow-card export-preview-card" aria-labelledby="exportTitle">
+            <header class="export-card__header">
+              <div>
+                <p class="eyebrow">字幕样式</p>
+                <h2 id="exportTitle">字幕预览</h2>
+              </div>
+            </header>
+            <div id="exportPreviewMedia" class="export-preview-media">
+              <span>选择当前分集后预览字幕效果</span>
+            </div>
+            <div class="export-preview-actions">
+              <button id="exportPreviewStartButton" class="ghost-button" type="button">生成分镜拼接预览</button>
+              <span id="exportPreviewStatus" class="status-meta export-preview-status">已有视频会按分镜顺序拼接，缺失分镜不会进入预览。</span>
+            </div>
+            <div class="export-subtitle-settings" aria-label="字幕设置">
+              <label>
+                字幕来源
+                <select id="exportSubtitleSource">
+                  <option>自动生成</option>
+                  <option>导入字幕</option>
+                  <option>无字幕</option>
+                </select>
+              </label>
+              <label>
+                字体
+                <select id="exportSubtitleFont">
+                  <option>思源黑体</option>
+                  <option>系统默认</option>
+                </select>
+              </label>
+              <label>
+                字号
+                <select id="exportSubtitleSize">
+                  <option>38</option>
+                  <option>32</option>
+                  <option>44</option>
+                </select>
+              </label>
+              <label>
+                位置
+                <select id="exportSubtitlePosition">
+                  <option>底部居中</option>
+                  <option>中部居中</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section class="workflow-card export-output-card" aria-labelledby="exportOutputTitle">
+            <header class="export-card__header">
+              <div>
+                <p class="eyebrow">输出文件</p>
+                <h2 id="exportOutputTitle">导出文件</h2>
+              </div>
+            </header>
+            <div class="export-settings">
+              <label>
+                视频分辨率
+                <select id="exportResolutionSelect">
+                  <option>1080p（1920×1080）</option>
+                  <option>竖屏 1080p（1080×1920）</option>
+                </select>
+              </label>
+              <label>
+                帧率
+                <select id="exportFrameRateSelect">
+                  <option>30 fps</option>
+                  <option>25 fps</option>
+                </select>
+              </label>
+              <label>
+                文件名称
+                <input id="exportFileNamePreview" type="text" readonly value="等待导出" />
+              </label>
+            </div>
+            <fieldset class="export-content">
+              <legend>导出内容</legend>
+              <label><input id="exportOriginalCheck" type="checkbox" checked disabled /> 原片 MP4</label>
+              <label><input id="exportSubtitleCheck" type="checkbox" checked disabled /> 字幕版 MP4</label>
+              <label><input id="exportSrtCheck" type="checkbox" checked disabled /> SRT 字幕</label>
+            </fieldset>
+            <div class="export-actions">
+              <button id="exportStartButton" class="primary-button" type="button" disabled>开始导出</button>
+              <button id="exportCancelButton" class="ghost-button" type="button" hidden>取消导出</button>
+            </div>
+            <div id="exportProgress" class="export-progress" hidden>
+              <div class="export-progress__track"><span id="exportProgressBar"></span></div>
+              <p id="exportProgressText">准备导出…</p>
+            </div>
+            <div class="export-results">
+              <div class="export-results__header">
+                <strong>导出结果</strong>
+                <span id="exportResultSummary">尚未导出</span>
+              </div>
+              <div id="exportResultList" class="export-result-list"></div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-status">
+      <span id="footerLeft" class="status-meta">就绪</span>
+      <span id="footerRight" class="status-meta"></span>
+    </footer>
+  </div>
+
+  <script type="module" src="./project.js"></script>
+</body>
+</html>

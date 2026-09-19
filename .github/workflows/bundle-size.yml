@@ -1,0 +1,22 @@
+# Phase 3 包体回归守卫：丈量 dist/ 不超 360 KB（仅前端静态资源口径，详见 P3Q2 决策）。
+# 超阈值硬阻断：CI fail，必须显式调阈值或瘦身才能合入。
+name: Bundle Size Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  size:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      # keytar 在 Linux 需要 libsecret-1-dev 才能装；CI 仅做包体丈量不必加载 keytar，
+      # 因此用 --ignore-scripts 跳过 keytar 的 native 构建步骤，避免拖慢 CI。
+      - run: npm ci --ignore-scripts
+      - run: npm run check:bundle-size

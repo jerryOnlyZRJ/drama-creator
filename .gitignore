@@ -1,0 +1,36 @@
+# 开发工作区
+.worktrees/
+
+# 依赖与构建缓存
+node_modules/
+
+# 静态构建产物：CI 每次跑 `npm run build` 自行产出，不入 git。
+# 保留在 git 里会让 PR diff 充斥构建副产物，且容易出现"git 里的 dist 与 build 产物不一致"的状态。
+dist/
+
+# 环境变量与本地凭据缓存（安全红线：凭据明文绝不进 git）
+.env
+.env.*
+*.local
+.credentials/
+*.key
+*.pem
+
+# 操作系统 / 编辑器产物
+.DS_Store
+
+# Tauri 构建产物：体积巨大且每机器都不同，CI/本地各自跑 build:tauri 重生成。
+# 注意：Cargo.lock 仍保留进 git（cargo 官方建议应用层提交锁文件以保证可复现）。
+src-tauri/target/
+
+# Tauri sidecar 是按本机 Rust target 生成的可执行构建产物；发布和 CI 通过
+# npm run build:sidecar 重建，避免把平台相关的大二进制提交到源码仓库。
+src-tauri/binaries/
+
+# 个人工作区和作品数据不能进入公开仓库；演示素材需独立审核。
+.codex/
+.drama-creator/
+projects/
+exports/
+*.log
+src-tauri/gen/

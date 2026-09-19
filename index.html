@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Drama Creator · 项目库</title>
+  <link rel="stylesheet" href="./shared.css" />
+  <link rel="stylesheet" href="./home.css" />
+</head>
+<body>
+  <div class="app-shell home">
+    <header class="app-bar">
+      <div class="app-bar__brand">
+        <span class="brand-mark" aria-hidden="true">DC</span>
+        <div class="brand-text">
+          <strong>Drama Creator</strong>
+          <span class="brand-meta">AI 视频创作工作台</span>
+        </div>
+      </div>
+      <nav class="app-bar__crumbs" aria-label="位置">
+        <span class="crumb crumb--current">项目库</span>
+      </nav>
+      <div class="app-bar__actions">
+        <a class="app-bar__settings-link" href="./settings.html">设置</a>
+        <button id="newProjectButton" class="primary-button">新建项目</button>
+      </div>
+    </header>
+
+    <main class="home__body">
+      <section class="home__intro">
+        <p class="eyebrow">AI Video Production</p>
+        <h1>从故事到成片，按步骤完成一部 AI 视频。</h1>
+        <p class="intro__sub">默认创建第 1 集，随后按「剧本与分镜、公共资产、分镜视频、成片导出」推进。每个项目都会保存在应用工作区内。</p>
+      </section>
+
+      <section class="home__recent-head" aria-labelledby="recentProjectsTitle">
+        <div>
+          <p class="eyebrow">Projects</p>
+          <h2 id="recentProjectsTitle">最近项目</h2>
+        </div>
+      </section>
+
+      <section id="projectsState" class="home__state" hidden></section>
+      <section id="projectsGrid" class="project-grid" aria-label="最近项目"></section>
+    </main>
+
+    <footer class="app-status">
+      <span id="discoveryNote" class="status-meta">正在读取项目…</span>
+      <span class="status-meta">v0.2 · 本地工作站</span>
+    </footer>
+  </div>
+
+  <dialog id="newProjectDialog" class="modal new-project-modal">
+    <form method="dialog" id="newProjectForm" class="modal__body">
+      <header class="modal__header">
+        <h2>新建 AI 视频项目</h2>
+        <p class="modal__hint">先填写项目名称，再选择从想法、故事或已有素材文本开始。系统会自动创建第 1 集。</p>
+      </header>
+
+      <label class="modal__field">
+        <span>项目名称</span>
+        <input type="text" id="newProjectName" name="name" autocomplete="off" placeholder="例如：末日废墟里的极致温柔" required />
+      </label>
+
+      <fieldset class="start-mode" aria-label="起步方式">
+        <legend>起步方式</legend>
+        <label class="start-mode__option">
+          <input type="radio" name="startMode" value="idea_text" checked />
+          <span>
+            <strong>从想法开始</strong>
+            <small>只写一句创意，先用文本模型扩写成完整故事。</small>
+          </span>
+        </label>
+        <label class="start-mode__option">
+          <input type="radio" name="startMode" value="story_text" />
+          <span>
+            <strong>从故事开始</strong>
+            <small>粘贴故事梗概、小说片段或口播稿，再改编成剧本。</small>
+          </span>
+        </label>
+        <label class="start-mode__option">
+          <input type="radio" name="startMode" value="material_text" />
+          <span>
+            <strong>从已有素材开始</strong>
+            <small>粘贴已有剧本、分镜说明、提示词或素材清单。</small>
+          </span>
+        </label>
+      </fieldset>
+
+      <div class="modal__field">
+        <div class="modal__field-row">
+          <span id="sourceTextLabel">文本内容</span>
+          <button type="button" id="generateStoryButton" class="ghost-button" hidden>生成完整故事</button>
+        </div>
+        <textarea id="sourceText" name="sourceText" rows="8" autocomplete="off" aria-labelledby="sourceTextLabel" aria-describedby="sourceTextHint" placeholder="粘贴故事源、剧本草稿或素材说明。"></textarea>
+        <small id="sourceTextHint" class="modal__field-hint">粘贴故事源、剧本草稿或素材说明。</small>
+      </div>
+
+      <p id="newProjectError" class="modal__error" hidden></p>
+      <footer class="modal__footer">
+        <button type="button" id="newProjectCancel" class="ghost-button">取消</button>
+        <button type="submit" class="primary-button">创建并进入</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <script type="module" src="./home.js"></script>
+</body>
+</html>

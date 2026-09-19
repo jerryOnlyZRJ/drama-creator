@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Drama Creator · 设置</title>
+  <link rel="stylesheet" href="./shared.css" />
+  <link rel="stylesheet" href="./settings.css" />
+</head>
+<body>
+  <!--
+    Phase 2 设置页：面向用户展示模型类型与授权方式，内部 adapter id 不直接出现在主 UI。
+    - GET /api/adapters 列出可用模型适配器（builtin + 外部 CLI 扫描结果合并）
+    - GET /api/credentials 列出应用级已配置项（仅 publicFields，永不含 secret）
+    - PUT /api/credentials/<adapterId> 粘贴 key → 写钥匙串 + 落 publicFields 到 APP 工作空间
+    - DELETE /api/credentials/<adapterId> 同步清理应用级引用与系统钥匙串
+  -->
+  <div class="app-shell settings">
+    <header class="app-bar">
+      <div class="app-bar__brand">
+        <span class="brand-mark" aria-hidden="true">DC</span>
+        <div class="brand-text">
+          <strong>Drama Creator</strong>
+          <span class="brand-meta">设置</span>
+        </div>
+      </div>
+      <a class="app-bar__settings-link" href="./index.html">返回项目库</a>
+    </header>
+    <main class="settings__main">
+      <section class="settings__section storage-section">
+        <h2>存储管理</h2>
+        <p class="settings__hint">删除的项目、分集和资源会先进入应用回收站；确认不再需要后可清空以释放磁盘空间。</p>
+        <div class="storage-card">
+          <div>
+            <strong>应用回收站</strong>
+            <p id="trashSummary">正在读取回收站…</p>
+          </div>
+          <div class="storage-card__actions">
+            <a class="ghost-button" href="./trash.html">管理回收站</a>
+            <button id="emptyTrashButton" class="danger-button" type="button" disabled>清空回收站</button>
+          </div>
+        </div>
+      </section>
+      <section class="settings__section">
+        <h2>模型与授权</h2>
+        <p class="settings__hint">按文本、图片、视频、音频选择模型能力；授权方式可使用订阅授权或服务商 API Key。密钥只写入系统钥匙串。</p>
+        <ul id="adapter-list" class="adapter-list" aria-busy="true">
+          <li class="adapter-list__loading">加载中…</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="./settings.js"></script>
+</body>
+</html>

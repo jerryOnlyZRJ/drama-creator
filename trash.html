@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Drama Creator · 回收站</title>
+  <link rel="stylesheet" href="./shared.css" />
+  <link rel="stylesheet" href="./trash.css" />
+</head>
+<body>
+  <div class="app-shell trash">
+    <header class="app-bar">
+      <div class="app-bar__brand">
+        <span class="brand-mark" aria-hidden="true">DC</span>
+        <div class="brand-text">
+          <strong>Drama Creator</strong>
+          <span class="brand-meta">回收站</span>
+        </div>
+      </div>
+      <nav class="app-bar__crumbs" aria-label="位置">
+        <a class="crumb crumb--link" href="./index.html">项目库</a>
+        <span class="crumb-sep">/</span>
+        <a class="crumb crumb--link" href="./settings.html">设置</a>
+        <span class="crumb-sep">/</span>
+        <span class="crumb crumb--current">回收站</span>
+      </nav>
+      <div class="app-bar__actions">
+        <button id="reloadTrashButton" class="ghost-button" type="button">刷新</button>
+      </div>
+    </header>
+
+    <main class="trash__main">
+      <section class="trash-summary" aria-labelledby="trashTitle">
+        <div>
+          <p class="eyebrow">Storage</p>
+          <h1 id="trashTitle">回收站管理</h1>
+          <p>已删除的项目、分集和资源会先保留在这里。恢复会回到原路径；彻底删除后无法在应用内恢复。</p>
+        </div>
+        <div class="trash-summary__stats" aria-label="回收站容量">
+          <strong id="trashTotalItems">0 项</strong>
+          <span id="trashTotalBytes">0 B</span>
+        </div>
+      </section>
+
+      <section class="trash-toolbar" aria-label="回收站筛选">
+        <input id="trashSearch" type="search" placeholder="搜索名称、类型或原路径" />
+        <div id="trashFilters" class="trash-filters" role="tablist" aria-label="类型筛选"></div>
+        <button id="emptyTrashButton" class="danger-button" type="button" disabled>清空回收站</button>
+      </section>
+
+      <div class="trash-workspace">
+        <section class="trash-workspace__list" aria-label="回收站列表">
+          <section id="trashState" class="trash-state" hidden></section>
+          <ul id="trashList" class="trash-list" aria-live="polite"></ul>
+        </section>
+
+        <aside id="trashDetail" class="trash-detail" aria-labelledby="trashDetailTitle">
+          <p class="eyebrow">Detail</p>
+          <h2 id="trashDetailTitle">选择回收站内容</h2>
+          <p id="trashDetailMeta" class="trash-detail__meta">点击左侧项目、分集或资源后，可查看来源和可执行操作。</p>
+          <dl id="trashDetailBody" class="trash-detail__body"></dl>
+          <div id="trashConfirmPanel" class="trash-confirm" hidden>
+            <strong id="trashConfirmTitle">确认操作</strong>
+            <p id="trashConfirmMessage"></p>
+            <div class="trash-confirm__actions">
+              <button id="trashConfirmCancelButton" class="ghost-button" type="button">取消</button>
+              <button id="trashConfirmActionButton" class="danger-button" type="button">确认</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="app-status">
+      <span id="trashFooterLeft" class="status-meta">正在读取回收站…</span>
+      <span id="trashFooterRight" class="status-meta">本机应用工作区</span>
+    </footer>
+  </div>
+
+  <script type="module" src="./trash.js"></script>
+</body>
+</html>

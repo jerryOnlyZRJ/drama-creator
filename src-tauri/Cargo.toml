@@ -1,0 +1,26 @@
+# drama-creator 桌面壳的 Cargo 包描述。
+# 注意：Tauri 2 的 CLI 与 tauri/tauri-build crate 必须保持大版本一致（均为 2.x）。
+[package]
+name = "drama-creator-tauri"
+version = "0.1.0"
+description = "drama-creator desktop shell"
+edition = "2021"
+publish = false
+
+[build-dependencies]
+# 编译期生成 Tauri 上下文（icon、配置等元数据）。
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Tauri 运行时：默认特性已包含 wry/webview，无需额外开关。
+tauri = { version = "2", features = [] }
+# Tauri shell plugin 负责启动打包后的 Node sidecar，并把订阅 OAuth 登录页交给系统浏览器打开。
+tauri-plugin-shell = "2"
+# rfd 仅用于系统目录/文件选择器；项目校验、资源复制和图谱写入仍由 Node 侧 API 处理。
+rfd = "0.15"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[features]
+# 发布构建启用 custom-protocol，避免 webview 走 http://tauri.localhost 路径。
+custom-protocol = ["tauri/custom-protocol"]
